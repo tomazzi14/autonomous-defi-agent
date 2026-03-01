@@ -1,12 +1,30 @@
-"""DeFi Code Generator - Creates real Solidity contracts based on job descriptions."""
+"""DeFi Code Generator - Creates Solidity contracts based on job descriptions.
+
+Uses Claude AI when available for tailored code generation.
+Falls back to battle-tested templates if AI is not configured.
+"""
 
 import logging
+
+from brain import generate_smart_code, is_ai_enabled
 
 logger = logging.getLogger("code_gen")
 
 
 def generate_solidity(job: dict) -> str:
-    """Analyze a job and generate tailored Solidity code."""
+    """Analyze a job and generate tailored Solidity code.
+
+    Strategy: AI-first with template fallback.
+    """
+    # Try AI generation first
+    if is_ai_enabled():
+        logger.info("Using AI brain for code generation...")
+        ai_code = generate_smart_code(job)
+        if ai_code:
+            return ai_code
+        logger.warning("AI code gen failed, falling back to templates")
+
+    # Template fallback
     title = job.get("title", "").lower()
     desc = job.get("description", "").lower()
     text = f"{title} {desc}"

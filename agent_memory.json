@@ -1,0 +1,84 @@
+{
+  "bids": {
+    "test-memory-001": {
+      "title": "Build a Uniswap V4 Hook for dynamic fees",
+      "tags": [
+        "solidity",
+        "uniswap",
+        "defi",
+        "hooks"
+      ],
+      "budget": "15",
+      "bid_amount": "12.8",
+      "proposal_snippet": "Test proposal",
+      "timestamp": "2026-03-01T01:49:01.203887",
+      "status": "delivered"
+    }
+  },
+  "wins": [
+    {
+      "job_id": "test-memory-001",
+      "title": "Build a Uniswap V4 Hook for dynamic fees",
+      "tags": [
+        "solidity",
+        "uniswap",
+        "defi",
+        "hooks"
+      ],
+      "budget": "15",
+      "timestamp": "2026-03-01T01:41:28.942126"
+    },
+    {
+      "job_id": "test-memory-001",
+      "title": "Build a Uniswap V4 Hook for dynamic fees",
+      "tags": [
+        "solidity",
+        "uniswap",
+        "defi",
+        "hooks"
+      ],
+      "budget": "15",
+      "timestamp": "2026-03-01T01:49:01.204586"
+    }
+  ],
+  "losses": [],
+  "deliveries": [
+    {
+      "job_id": "test-memory-001",
+      "title": "Build a Uniswap V4 Hook for dynamic fees",
+      "earning": 12.8,
+      "timestamp": "2026-03-01T01:41:28.942275"
+    },
+    {
+      "job_id": "test-memory-001",
+      "title": "Build a Uniswap V4 Hook for dynamic fees",
+      "earning": 12.8,
+      "timestamp": "2026-03-01T01:49:01.205062"
+    }
+  ],
+  "earnings": 25.6,
+  "stats": {
+    "total_bids": 2,
+    "total_wins": 2,
+    "total_deliveries": 2,
+    "win_rate": 1.0
+  },
+  "tag_performance": {
+    "solidity": {
+      "bids": 0,
+      "wins": 2
+    },
+    "uniswap": {
+      "bids": 0,
+      "wins": 2
+    },
+    "defi": {
+      "bids": 0,
+      "wins": 2
+    },
+    "hooks": {
+      "bids": 0,
+      "wins": 2
+    }
+  }
+}

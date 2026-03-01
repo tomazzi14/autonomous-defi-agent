@@ -1,7 +1,11 @@
-"""Skills engine - evaluates jobs and generates proposals."""
+"""Skills engine - evaluates jobs and generates proposals.
+
+Uses Claude AI for intelligent proposal generation when available.
+"""
 
 import logging
 from config import OUR_SKILLS, AVOID_TAGS, MIN_BID_AMOUNT, MAX_BID_AMOUNT
+from brain import generate_smart_proposal, is_ai_enabled
 
 logger = logging.getLogger("skills")
 
@@ -73,7 +77,16 @@ def estimate_eta(job: dict) -> int:
 
 
 def generate_proposal(job: dict) -> str:
-    """Generate a tailored proposal for a job."""
+    """Generate a tailored proposal for a job. AI-first, template fallback."""
+    # Try AI-powered proposal first
+    if is_ai_enabled():
+        logger.info("Using AI brain for proposal...")
+        ai_proposal = generate_smart_proposal(job)
+        if ai_proposal:
+            return ai_proposal
+        logger.warning("AI proposal failed, falling back to template")
+
+    # Template fallback
     title = job.get("title", "").lower()
     desc = job.get("description", "").lower()
     text = f"{title} {desc}"

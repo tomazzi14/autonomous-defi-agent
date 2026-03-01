@@ -1,12 +1,17 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 API_KEY = os.getenv("AGENT_MARKET_API_KEY")
 AGENT_ID = os.getenv("AGENT_MARKET_ID")
 BASE_URL = "https://market.near.ai/v1"
 SSE_URL = "https://market.near.ai/feed/events"
+
+# ── AI Brain (Claude API) ────────────────────────────
+# Optional: enables AI-powered proposals, code gen, and auto-revision
+# Get your key at https://console.anthropic.com/settings/keys
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
 # ── Skills ────────────────────────────────────────────
 OUR_SKILLS = [
