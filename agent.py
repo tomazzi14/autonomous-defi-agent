@@ -1,10 +1,12 @@
 """
 NEAR Agent Market - Autonomous DeFi Agent
 ==========================================
-An agent that combines three strategies:
-  1. SNIPER  - Real-time SSE listener, bids in < 5 seconds
-  2. CODE GEN - Generates real Solidity contracts as deliverables
+An agent that combines five strategies:
+  1. SNIPER    - Real-time SSE listener, bids in < 5 seconds
+  2. CODE GEN  - AI-powered Solidity code generation (Claude + template fallback)
   3. TEAM LEAD - Delegates complex jobs to other agents
+  4. MESSENGER - Auto-responds to client messages and revision requests
+  5. MEMORY    - Learns from wins/losses, tracks performance over time
 
 Usage:
     python agent.py              # Run one cycle (poll + deliver)
@@ -23,6 +25,9 @@ from skills import score_job, calculate_bid_amount, estimate_eta, generate_propo
 from code_generator import generate_solidity
 from team_lead import should_delegate, plan_subtasks, format_combined_deliverable
 from sniper import Sniper
+from messenger import check_and_respond
+from memory import record_bid, record_win, record_delivery, get_stats, was_bid_on
+from brain import is_ai_enabled
 from config import POLL_INTERVAL, MAX_BIDS_PER_CYCLE
 
 # ── Logging ──────────────────────────────────────────────
@@ -39,7 +44,7 @@ logger = logging.getLogger("agent")
 
 
 class DeFiAgent:
-    """Autonomous DeFi agent with Sniper, Code Gen, and Team Lead modes."""
+    """Autonomous DeFi agent with Sniper, Code Gen, Team Lead, Messenger, and Memory."""
 
     def __init__(self):
         self.client = MarketClient()
@@ -50,14 +55,18 @@ class DeFiAgent:
     # ── Main Cycle ────────────────────────────────────────
 
     def run_cycle(self):
-        """One full cycle: status -> find -> bid -> check wins -> deliver."""
+        """One full cycle: status -> find -> bid -> check wins -> deliver -> messages."""
         logger.info("=" * 60)
         logger.info("CYCLE START: %s", datetime.now().isoformat())
         logger.info("=" * 60)
 
+        mode = "AI" if is_ai_enabled() else "TEMPLATE"
+        logger.info("Brain mode: %s", mode)
+
         self._log_status()
         self._find_and_bid()
         self._check_accepted_bids()
+        self._check_messages()
         self._check_delegated_work()
 
         logger.info("CYCLE END\n")
@@ -68,6 +77,7 @@ class DeFiAgent:
         try:
             profile = self.client.my_profile()
             balance = self.client.wallet_balance()
+            mem_stats = get_stats()
             logger.info(
                 "Agent: %s | Earned: %s NEAR | Rep: %s/100 | Stars: %s",
                 profile.get("handle", "?"),
@@ -76,6 +86,13 @@ class DeFiAgent:
                 profile.get("reputation_stars", 0),
             )
             logger.info("Balance: %s", balance)
+            logger.info(
+                "Memory: %d bids tracked, %d wins, %.0f%% win rate, %.1f NEAR earned",
+                mem_stats["total_bids"],
+                mem_stats["total_wins"],
+                mem_stats["win_rate"] * 100,
+                mem_stats["earnings"],
+            )
         except Exception as e:
             logger.warning("Status check failed: %s", e)
 
@@ -93,7 +110,9 @@ class DeFiAgent:
 
         scored = []
         for job in jobs:
-            if job["job_id"] in self.jobs_bid_on:
+            job_id = job["job_id"]
+            # Skip if already bid (in-memory or persistent)
+            if job_id in self.jobs_bid_on or was_bid_on(job_id):
                 continue
             score = score_job(job)
             if score > 0.2:
@@ -135,6 +154,10 @@ class DeFiAgent:
                 )
                 self.jobs_bid_on.add(job_id)
                 bids_placed += 1
+
+                # Record in persistent memory
+                record_bid(job_id, job, bid_amount, proposal)
+
                 logger.info(
                     "    -> BID: %s NEAR, ETA %dh | bid_id=%s",
                     bid_amount, eta // 3600, result.get("bid_id", "?"),
@@ -174,6 +197,9 @@ class DeFiAgent:
             title = job.get("title", "?")
             logger.info("WON: '%s' - Starting work...", title)
 
+            # Record the win in memory
+            record_win(job_id, job)
+
             if should_delegate(job):
                 self._delegate_job(job)
             else:
@@ -184,7 +210,7 @@ class DeFiAgent:
         job_id = job["job_id"]
         title = job.get("title", "?")
 
-        logger.info("  Generating Solidity code for: %s", title[:50])
+        logger.info("  Generating deliverable for: %s", title[:50])
         deliverable = generate_solidity(job)
 
         try:
@@ -194,6 +220,10 @@ class DeFiAgent:
             logger.error("  Delivery failed: %s", e)
             return
 
+        # Record delivery + earnings in memory
+        earning = float(job.get("budget_amount") or 0)
+        record_delivery(job_id, job, earning)
+
         my_assignments = job.get("my_assignments", [])
         if my_assignments:
             aid = my_assignments[0].get("assignment_id")
@@ -202,11 +232,38 @@ class DeFiAgent:
                     self.client.send_assignment_message(
                         aid,
                         f"Deliverable submitted for '{title}'. "
-                        f"Includes working Solidity code with docs. "
-                        f"Let me know if you need revisions!",
+                        f"Includes working code with documentation. "
+                        f"Let me know if you need revisions — I respond fast!",
                     )
                 except Exception:
                     pass
+
+    # ── Messenger: Auto-Reply ─────────────────────────────
+
+    def _check_messages(self):
+        """Check for client messages on active assignments and auto-respond."""
+        logger.info("Checking for client messages...")
+        try:
+            bids = self.client.my_bids()
+        except Exception:
+            return
+
+        accepted = [b for b in bids if b.get("status") == "accepted"]
+        replies_sent = 0
+
+        for bid in accepted:
+            job_id = bid["job_id"]
+            try:
+                job = self.client.get_job(job_id)
+            except Exception:
+                continue
+
+            response = check_and_respond(self.client, job)
+            if response:
+                replies_sent += 1
+
+        if replies_sent:
+            logger.info("Sent %d auto-replies to client messages", replies_sent)
 
     # ── Team Lead: Delegation ─────────────────────────────
 
@@ -294,6 +351,9 @@ class DeFiAgent:
                         "  DELIVERED (with team): '%s'",
                         info["parent_job"].get("title", "?")[:50],
                     )
+                    # Record delivery
+                    earning = float(info["parent_job"].get("budget_amount") or 0)
+                    record_delivery(parent_id, info["parent_job"], earning)
                 except Exception as e:
                     logger.error("  Combined delivery failed: %s", e)
                 del self.delegated_jobs[parent_id]
@@ -304,9 +364,12 @@ class DeFiAgent:
         profile = self.client.my_profile()
         balance = self.client.wallet_balance()
         bids = self.client.my_bids()
+        mem_stats = get_stats()
 
         accepted = [b for b in bids if b["status"] == "accepted"]
         pending = [b for b in bids if b["status"] == "pending"]
+
+        brain_mode = "AI (Claude Haiku)" if is_ai_enabled() else "Templates"
 
         print("\n" + "=" * 55)
         print("  defi_builder - Autonomous DeFi Agent")
@@ -319,7 +382,9 @@ class DeFiAgent:
         print(f"  Bids:        {len(pending)} pending, {len(accepted)} accepted")
         print(f"  Total bids:  {profile.get('bids_placed', 0)}")
         print(f"  Jobs done:   {profile.get('jobs_completed', 0)}")
-        print(f"  Features:    Sniper + Code Gen + Team Lead")
+        print(f"  Brain:       {brain_mode}")
+        print(f"  Win rate:    {mem_stats['win_rate']*100:.0f}%")
+        print(f"  Features:    Sniper + AI Brain + Team Lead + Messenger + Memory")
         print("=" * 55 + "\n")
 
     def run_with_sniper(self):
