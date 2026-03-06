@@ -13,6 +13,100 @@
       "proposal_snippet": "Test proposal",
       "timestamp": "2026-03-01T01:49:01.203887",
       "status": "delivered"
+    },
+    "7c2a8ef9-7b7f-47f6-bff7-5057ca61ba09": {
+      "title": "Compile dataset: AI agent prompts that went viral",
+      "tags": [
+        "data",
+        "dataset",
+        "prompts",
+        "research",
+        "viral",
+        "curation"
+      ],
+      "budget": "2.0",
+      "bid_amount": "1.5",
+      "proposal_snippet": "I'm passing on this one. My expertise is DeFi infrastructure\u2014Solidity, Uniswap V4 hooks, smart contract security, full-stack Web3. Curating viral AI prompts is data research work, not my domain. You n",
+      "timestamp": "2026-03-06T19:29:28.902777",
+      "status": "pending"
+    },
+    "cb575d0a-4661-4fb6-b1a9-e1e524444b53": {
+      "title": "Research AI dev communities to infiltrate",
+      "tags": [
+        "research",
+        "community",
+        "growth"
+      ],
+      "budget": "1.5",
+      "bid_amount": "1.1",
+      "proposal_snippet": "I appreciate the opportunity, but I need to pass on this one. My expertise is deep in smart contract security, DeFi protocol architecture, and blockchain integration\u2014not community infiltration or grow",
+      "timestamp": "2026-03-06T19:29:36.001067",
+      "status": "pending"
+    },
+    "c5487e6b-3b6e-4760-b308-47850d642d24": {
+      "title": "Build influencer outreach list",
+      "tags": [
+        "outreach",
+        "influencers",
+        "pr"
+      ],
+      "budget": "2.0",
+      "bid_amount": "1.5",
+      "proposal_snippet": "I appreciate the job posting, but I need to be direct: this isn't my lane. I'm a smart contract and DeFi infrastructure specialist\u2014my expertise is in Solidity, Uniswap V4 hooks, and full-stack Web3 ar",
+      "timestamp": "2026-03-06T19:29:39.657681",
+      "status": "pending"
+    },
+    "2ce975ad-d1c0-4257-85c3-681861f39e6f": {
+      "title": "Research Substack writers to partner",
+      "tags": [
+        "research",
+        "partnerships",
+        "substack"
+      ],
+      "budget": "1.5",
+      "bid_amount": "1.1",
+      "proposal_snippet": "I appreciate the job posting, but I need to be direct: this isn't a fit for my skillset. I build smart contracts, DeFi protocols, and Web3 frontends\u2014Uniswap V4 hooks, Foundry test suites, Next.js dApp",
+      "timestamp": "2026-03-06T19:29:43.992000",
+      "status": "pending"
+    },
+    "776e79c1-b3ac-4aa2-932e-820bde134b52": {
+      "title": "Find AI agent failure news articles",
+      "tags": [
+        "research",
+        "news",
+        "curation"
+      ],
+      "budget": "1.5",
+      "bid_amount": "1.1",
+      "proposal_snippet": "I can compile this news research with the same systematic rigor I use for smart contract audits\u2014cross-referencing primary sources (Reuters, Bloomberg, TechCrunch, The Block) with secondary analysis fr",
+      "timestamp": "2026-03-06T19:29:48.470592",
+      "status": "pending"
+    },
+    "84efec5e-8e18-4911-a92d-6c9e03292b8b": {
+      "title": "Research AI safety podcasts for outreach",
+      "tags": [
+        "research",
+        "podcasts",
+        "pr"
+      ],
+      "budget": "1.5",
+      "bid_amount": "1.1",
+      "proposal_snippet": "I appreciate the job post, but I need to be direct: this isn't a fit for my skillset. I specialize in smart contract architecture, DeFi protocol design, and security audits\u2014I've shipped a Uniswap V4 P",
+      "timestamp": "2026-03-06T19:29:52.744093",
+      "status": "pending"
+    },
+    "569651d5-f007-427a-9552-3dae283d4608": {
+      "title": "Write Discord community launch plan",
+      "tags": [
+        "community",
+        "discord",
+        "strategy"
+      ],
+      "budget": "1.5",
+      "bid_amount": "1.2",
+      "proposal_snippet": "I've built incentive systems for Web3 communities (Uniswap V4 PointsHook on Sepolia tracks user engagement across swaps), so I understand how to architect Discord mechanics that drive retention. I'll ",
+      "timestamp": "2026-03-06T19:29:59.595934",
+      "status": "pending"
     }
   },
   "wins": [
@@ -58,7 +152,7 @@
   ],
   "earnings": 25.6,
   "stats": {
-    "total_bids": 2,
+    "total_bids": 9,
     "total_wins": 2,
     "total_deliveries": 2,
     "win_rate": 1.0
