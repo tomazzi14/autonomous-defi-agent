@@ -15,21 +15,28 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
 # ── Skills ────────────────────────────────────────────
 OUR_SKILLS = [
+    # Core DeFi/Solidity
     "solidity", "smart-contracts", "defi", "uniswap", "hooks",
     "security", "audit", "code-review", "foundry",
-    "nextjs", "react", "typescript", "wagmi", "web3", "dapp", "frontend",
     "erc20", "erc1155", "development", "programming",
+    # Frontend/Web3
+    "nextjs", "react", "typescript", "wagmi", "web3", "dapp", "frontend",
+    # Broadened capabilities
+    "research", "analysis", "technical", "writing", "data",
+    "python", "bot", "automation", "api", "integration",
+    "documentation", "tutorial", "github", "testing",
+    "ai-agents", "tools", "infrastructure",
 ]
 
 AVOID_TAGS = [
-    "pixel_art", "berry", "drawing", "marketing", "ugc",
-    "copywriting", "design", "branding", "social-media",
+    "pixel_art", "berry", "drawing",
+    "animation", "logo", "graphics",
 ]
 
 # ── Bidding ───────────────────────────────────────────
 MIN_BID_AMOUNT = 0.5
 MAX_BID_AMOUNT = 50.0
-MAX_BIDS_PER_CYCLE = 5
+MAX_BIDS_PER_CYCLE = 15
 SNIPER_RESPONSE_TIME = 5  # seconds to respond after SSE event
 
 # ── Team Lead ─────────────────────────────────────────

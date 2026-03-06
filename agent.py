@@ -22,7 +22,7 @@ from datetime import datetime
 
 from market_client import MarketClient
 from skills import score_job, calculate_bid_amount, estimate_eta, generate_proposal
-from code_generator import generate_solidity
+from code_generator import generate_deliverable
 from team_lead import should_delegate, plan_subtasks, format_combined_deliverable
 from sniper import Sniper
 from messenger import check_and_respond
@@ -115,11 +115,11 @@ class DeFiAgent:
             if job_id in self.jobs_bid_on or was_bid_on(job_id):
                 continue
             score = score_job(job)
-            if score > 0.2:
+            if score >= 0.1:
                 scored.append((score, job))
 
         scored.sort(key=lambda x: x[0], reverse=True)
-        logger.info("Matched %d jobs (score > 0.2)", len(scored))
+        logger.info("Matched %d jobs (score >= 0.1)", len(scored))
 
         bids_placed = 0
         for score, job in scored:
@@ -211,7 +211,7 @@ class DeFiAgent:
         title = job.get("title", "?")
 
         logger.info("  Generating deliverable for: %s", title[:50])
-        deliverable = generate_solidity(job)
+        deliverable = generate_deliverable(job)
 
         try:
             self.client.submit_deliverable(job_id=job_id, deliverable=deliverable)
@@ -279,7 +279,7 @@ class DeFiAgent:
             return
 
         logger.info("  Generating core deliverable ourselves...")
-        main_work = generate_solidity(job)
+        main_work = generate_deliverable(job)
 
         posted = []
         for task in subtasks:
@@ -368,6 +368,7 @@ class DeFiAgent:
 
         accepted = [b for b in bids if b["status"] == "accepted"]
         pending = [b for b in bids if b["status"] == "pending"]
+        rejected = [b for b in bids if b["status"] in ("rejected", "expired")]
 
         brain_mode = "AI (Claude Haiku)" if is_ai_enabled() else "Templates"
 
@@ -378,13 +379,77 @@ class DeFiAgent:
         print(f"  Earned:      {profile.get('total_earned', '0')} NEAR")
         print(f"  Reputation:  {profile.get('reputation_score', 0)}/100")
         print(f"  Stars:       {profile.get('reputation_stars', 0)}/5.0")
-        print(f"  Balance:     {balance}")
-        print(f"  Bids:        {len(pending)} pending, {len(accepted)} accepted")
+        near_bal = "0"
+        if isinstance(balance, dict):
+            for b in balance.get("balances", []):
+                if b.get("symbol") == "NEAR":
+                    near_bal = b.get("balance", "0")
+        print(f"  Balance:     {near_bal} NEAR")
         print(f"  Total bids:  {profile.get('bids_placed', 0)}")
         print(f"  Jobs done:   {profile.get('jobs_completed', 0)}")
         print(f"  Brain:       {brain_mode}")
+        print("-" * 55)
+        print(f"  Pending:     {len(pending)}")
+        print(f"  Accepted:    {len(accepted)}")
+        print(f"  Rejected:    {len(rejected)}")
         print(f"  Win rate:    {mem_stats['win_rate']*100:.0f}%")
-        print(f"  Features:    Sniper + AI Brain + Team Lead + Messenger + Memory")
+        print(f"  Earnings:    {mem_stats['earnings']:.1f} NEAR (tracked)")
+
+        if accepted:
+            print("-" * 55)
+            print("  ACTIVE JOBS:")
+            for b in accepted:
+                print(f"    > {b.get('job_title', b.get('job_id', '?'))[:50]}")
+
+        top = mem_stats.get("top_tags", [])
+        if top:
+            print("-" * 55)
+            tags_str = ", ".join(f"{t['tag']}({t['wins']}W)" for t in top[:5])
+            print(f"  Top tags:    {tags_str}")
+
+        print("-" * 55)
+        print("  Features:    Sniper + AI Brain + Team Lead + Messenger + Memory")
+        print("=" * 55 + "\n")
+
+    def print_dashboard(self):
+        """Extended dashboard with marketplace overview."""
+        self.print_status()
+
+        # Marketplace overview
+        try:
+            jobs = self.client.list_jobs(status="open", limit=50)
+        except Exception:
+            jobs = []
+
+        bids = self.client.my_bids()
+        our_job_ids = {b.get("job_id") for b in bids}
+
+        open_count = len(jobs)
+        our_bids = len([j for j in jobs if j["job_id"] in our_job_ids])
+        new_count = open_count - our_bids
+
+        print("  MARKETPLACE")
+        print("-" * 55)
+        print(f"  Open jobs:     {open_count}")
+        print(f"  We bid on:     {our_bids}")
+        print(f"  Available:     {new_count}")
+        print()
+
+        # Show top opportunities we haven't bid on
+        unbid = [j for j in jobs if j["job_id"] not in our_job_ids]
+        if unbid:
+            # Sort by budget descending
+            unbid.sort(
+                key=lambda j: float(j.get("budget_amount") or 0),
+                reverse=True,
+            )
+            print("  TOP OPPORTUNITIES:")
+            for j in unbid[:5]:
+                budget = j.get("budget_amount", "?")
+                bids_c = j.get("bid_count", 0)
+                title = j.get("title", "?")[:45]
+                print(f"    {title} | {budget} NEAR | {bids_c} bids")
+
         print("=" * 55 + "\n")
 
     def run_with_sniper(self):
@@ -406,12 +471,15 @@ def main():
     parser = argparse.ArgumentParser(description="defi_builder - NEAR Agent Market")
     parser.add_argument("--sniper", action="store_true", help="SSE real-time + polling")
     parser.add_argument("--status", action="store_true", help="Show agent status")
+    parser.add_argument("--dashboard", action="store_true", help="Full dashboard + marketplace")
     parser.add_argument("--demo", action="store_true", help="Run demo cycle (verbose)")
     args = parser.parse_args()
 
     agent = DeFiAgent()
 
-    if args.status:
+    if args.dashboard:
+        agent.print_dashboard()
+    elif args.status:
         agent.print_status()
     elif args.demo:
         logging.getLogger().setLevel(logging.DEBUG)
